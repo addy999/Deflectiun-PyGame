@@ -2,15 +2,17 @@ from .utilities import *
 
 class Asset:
     
-    def __init__(self, name, x = 0.0, y = 0.0, mass = 0, x_Vel = 0.0, y_vel = 0.0):
+    def __init__(self, name, x = 0.0, y = 0.0, mass = 0, vel = None):
         
         self.x = x
         self.y = y
         self.name = name
         self.mass = mass
-        self.x_vel = x_Vel
-        self.y_vel = y_vel
-        self._p = Momentum(self.x_vel, self.y_vel, self.mass)
+        self.vel = vel
+        if not vel:
+            self.vel = Velocity(0.0, 0.0)
+            
+        self._p = Momentum(self.vel.x, self.vel.y, self.mass)
     
     def resetPos(self):
         
@@ -50,8 +52,7 @@ class Asset:
     @p.setter
     def p(self, val):
         self._p = val
-        self.x_vel = val.x / self.mass
-        self.y_vel = val.y / self.mass
+        self.vel = Velocity(val.x / self.mass, val.y / self.mass)
      
            
 class Planet(Asset):
