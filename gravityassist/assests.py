@@ -1,4 +1,6 @@
-from .utilities import *
+import sys
+sys.path.append('./')
+from utilities import *
 
 class Asset:
     
@@ -53,8 +55,7 @@ class Asset:
     def p(self, val):
         self._p = val
         self.vel = Velocity(val.x / self.mass, val.y / self.mass)
-     
-           
+              
 class Planet(Asset):
     
     def __init__(self, name, x  = 0.0, y = 0.0, mass = 0.0, orbit = Orbit, orbit_period = 30.0):
@@ -85,14 +86,14 @@ class Spacecraft(Asset):
     
     def findClosestPlanet(self, planets):
         
-        current_distance = calcDistance(planets[0].x, planets[0].y, self.x, self.y)
+        current_distance = self.calcDistance(planets[0])
         index_of_closest = 0
         current_index = 0
         for num in range(len(planets)):
             current_index += 1
-            if(calcDistance(planets[current_index].x, planets[current_index].y, self.x, self.y) < current_distance): 
+            if self.calcDistance(planets[current_index]) < current_distance: 
                 index_of_closest = current_index
-                current_distance = calcDistance(planets[current_index].x, planets[current_index].y, self.x, self.y)
+                current_distance = self.calcDistance(planets[current_index])
         
         if current_distance < PLANET_DISTANCE_THRESHOLD:
             return planets[index_of_closest]
@@ -103,6 +104,9 @@ class Spacecraft(Asset):
         
         if self.thrust:
             if self.thrust_direction == '-y':
+                force = Force(0.0, -1.0, self.thrust_mag)
+                return Momentum.fromImpulse(force, 1/FPS)
+            elif self.thrust_direction == '+y':
                 force = Force(0.0, 1.0, self.thrust_mag)
                 return Momentum.fromImpulse(force, 1/FPS)
             elif self.thrust_direction == '-x':
@@ -127,12 +131,25 @@ class Spacecraft(Asset):
                 planet_f = self.calcGravitationalForce(closes_planet)
                 planet_i = Momentum.fromImpulse(planet_f, 1/FPS) 
         
+        # print('Thrust', thrust_i)
+        # print('Planet', planet_i)
         self.p = self.p + thrust_i + planet_i       
-                
     
-    def calculateDirectionalVelocity(self, system_momentum_const, current_total_planetary_momentum, closest_planet_impulse, thrust_impulse):
+    def move(self):
+        
+        delta_time = 1/FPS
+        self.x += self.vel.x * delta_time
+        self.y += self.vel.y * delta_time
+    
+    def refresh(self, planets = None):
+        
+        self.updateMomentum(planets)
+        self.move()    
+    
+    
+    # def calculateDirectionalVelocity(self, system_momentum_const, current_total_planetary_momentum, closest_planet_impulse, thrust_impulse):
 
-        return (system_momentum_const - current_total_planetary_momentum + closest_planet_impulse + thrust_impulse) / self.mass
+    #     return (system_momentum_const - current_total_planetary_momentum + closest_planet_impulse + thrust_impulse) / self.mass
     
     # def getPos(self, time):
     #     return (self.trajectory.x(time), self.trajectory.y(time))       
