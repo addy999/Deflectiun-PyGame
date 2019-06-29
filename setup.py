@@ -2,12 +2,12 @@ import os,sys
 from setuptools import setup
 
 # For regular package imports, not 'import .packagename'
-modpath = os.path.abspath(os.path.split(sys.argv[0])[0]) + '/gravityassist'
+modpath = os.path.abspath(os.path.split(sys.argv[0])[0]) + '/cosmicboost'
 sys.path.append(modpath)
-import gravityassist
+import cosmicboost
 
-setup(name=gravityassist.__name__,
-      version=gravityassist.__version__,
+setup(name=cosmicboost.__name__,
+      version=cosmicboost.__version__,
       description='...',
       url='...',
       author='...',
