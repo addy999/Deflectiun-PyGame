@@ -4,7 +4,6 @@ import math
 ############### Constants ###############
 
 FPS = 60 
-PLANET_DISTANCE_THRESHOLD = 100000
 
 ########################################
 
@@ -14,12 +13,23 @@ class Velocity:
         
         self.x = x_vel
         self.y = y_vel
+        self.rot_matrix = getRotMatrix(self.getTheta())
+    
+    def getTheta(self):
+        
+        if self.x != 0.0:
+            return math.atan(self.y / self.x)
+        elif self.y > 0.0:
+            return np.pi/2
+        elif self.y == 0.0:
+            return 0.0
+        elif self.y < 0.0:
+            return np.pi * 1.5
     
     def getMag(self):
         return (self.x ** 2 + self.y ** 2) ** 0.5
 
     def __repr__(self):
-        
         return str((self.x, self.y))
 
 class Force:
@@ -95,3 +105,9 @@ class Orbit:
         self.progress = 0
         return self.x(self.progress), self.y(self.progress)
         
+def getRotMatrix(theta):
+    
+    return [
+        [math.cos(theta), -math.sin(theta)],
+        [math.sin(theta), math.cos(theta)]
+    ]
