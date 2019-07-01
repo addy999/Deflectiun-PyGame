@@ -1,5 +1,5 @@
 import pygame
-import sys
+import os, sys
 sys.path.append('./')
 from assests import *
 from utilities import *
@@ -10,10 +10,18 @@ pygame.font.init()
 # Setup screen
 screen_x, screen_y = 500, 500
 screen = pygame.display.set_mode((screen_x, screen_y))
-screen.fill((0, 0, 0))
 font = pygame.font.SysFont('Helvetica Neue', 30)
 win_region_x = (screen_x/2-50, screen_x/2+50)
 won = False
+
+# background
+stars = pygame.image.load(r'C:\Users\addym\Documents\Gravity Assists\astron\stars_1.jpg')
+stars_scaled = pygame.transform.scale(stars, (screen_x, screen_y))
+rect = stars_scaled.get_rect()
+rect = rect.move((0,0))
+screen.fill((0, 0, 0))
+# screen.blit(stars_scaled, (0,0))
+screen.blit(stars_scaled, rect)
 
 # Utilities 
 done = False
@@ -31,6 +39,8 @@ planets = [planet, planet2]
 while not done:
         
         screen.fill((0, 0, 0))
+        # screen.blit(stars, (0,0))
+        screen.blit(stars_scaled, rect)
         
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -93,6 +103,9 @@ while not done:
                                 [sc.x+20, sc.y+35/2-5],
                                 [sc.x+20, sc.y+35/2+5],
                                 ])
+        vel = 50 * unit_vector((sc.vel.x, sc.vel.y))
+        pygame.draw.line(screen, (0.0, 255, 174), (sc.x, sc.y), (sc.x + vel[0], sc.y + vel[1]), 5)
+         
                  
         # Update screen
         # print(sc.vel, sc.x, sc.y)

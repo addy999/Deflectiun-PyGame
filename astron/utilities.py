@@ -104,6 +104,10 @@ class Orbit:
     def resetPos(self):
         self.progress = 0
         return self.x(self.progress), self.y(self.progress)
+ 
+def unit_vector(vector):
+    """ Returns the unit vector of the vector.  """
+    return vector / np.linalg.norm(vector)
         
 def getRotMatrix(theta):
     
