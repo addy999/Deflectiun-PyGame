@@ -1,2 +1,8 @@
-/gravityassist/__pycache__
+/astron/__pycache__
 .vscode
+/*.ipynb
+/.ipynb_checkpoints
+*/.pyc
+
+astron/__pycache__/assests.cpython-37.pyc
+astron/__pycache__/utilities.cpython-37.pyc
