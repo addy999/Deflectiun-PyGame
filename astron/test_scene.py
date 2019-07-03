@@ -132,10 +132,10 @@ while not done:
         
                  
         # Update screen
-        text_surface = font.render(str(sc.gas_level), True, (255,255,255))
-        screen.blit( text_surface, (screen_x-50, screen_y-20))
-        text_surface = font.render(str(sc.vel.mag), True, (255,255,255))
-        screen.blit( text_surface, (screen_x-50, screen_y-60))
+        text_surface = font.render('Gas: ' + str(sc.gas_level), True, (255,255,255))
+        screen.blit( text_surface, (screen_x-100, screen_y-60))
+        text_surface = font.render('Velocity: ' + str(round(sc.vel.mag,2)), True, (255,255,255))
+        screen.blit( text_surface, (screen_x-145, screen_y-20))
         
         pygame.display.update()
         clock.tick(FPS)
