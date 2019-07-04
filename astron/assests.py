@@ -1,10 +1,10 @@
-import sys
+import sys, os
 import numpy as np
 import pygame
 sys.path.append('./')
 from utilities import *
 
-DEFAULT_SC_SPRITE = r'./images/ship1.png'
+DEFAULT_SC_SPRITE = r'./astron/images/ship1.png' 
 
 class Asset:
     
@@ -97,12 +97,9 @@ class Sprite:
     
         sc_rot, sc_rect = self.transform(x, y, theta_degrees)
         
-        
-        
-
 class Spacecraft(Asset):
     
-    def __init__(self, name, starting_x = 0.0, starting_y = 0.0, mass = 0.0, gas_level = 0.0, thrust_force = 0.0, sprite_path = None):
+    def __init__(self, name, starting_x = 0.0, starting_y = 0.0, mass = 0.0, gas_level = 0.0, thrust_force = 0.0, sprite = None):
         
         super().__init__(name, starting_x, starting_y, mass)
         self.gas_level = gas_level
@@ -110,7 +107,11 @@ class Spacecraft(Asset):
         self.thrust_direction = '-y' # +/-x,-y
         self.thrust_mag = thrust_force
         self._brakes = False
-        self.sprite = sprite_path
+        self.sprite = sprite
+        
+        # Load default if none given
+        if not sprite:
+            self.sprite = Sprite()
     
     def bodyTransform(self, vector):
         
