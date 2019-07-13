@@ -1,7 +1,7 @@
 import pygame
 import os, sys
 import math
-sys.path.append('./')
+sys.path.append('./astron')
 from assests import *
 from utilities import *
 

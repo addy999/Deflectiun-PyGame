@@ -1,12 +1,6 @@
 import numpy as np
 import math
 
-############### Constants ###############
-
-FPS = 60 
-
-########################################
-
 class Velocity:
     
     def __init__(self, x_vel, y_vel):
@@ -16,18 +10,10 @@ class Velocity:
         self.vec = [self.x, self.y]
         self.rot_matrix = getRotMatrix(self.getTheta())
         self.mag = (self.x ** 2 + self.y ** 2) ** 0.5
+        self.theta = self.getTheta()
     
     def getTheta(self):
         
-        # if self.x != 0.0:
-        #     angle =  math.atan(self.y / self.x) 
-        # elif self.y > 0.0:
-        #     angle =  np.pi/2
-        # elif self.y == 0.0:
-        #     angle = 0.0
-        # elif self.y < 0.0:
-        #     angle = np.pi * 1.5
-
         angle = angleBetween([1,0], self.vec)
         if self.y < 0:
             angle += np.pi
