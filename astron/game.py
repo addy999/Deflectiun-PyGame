@@ -1,6 +1,9 @@
 import pygame
 import os, sys
 import math
+import numpy as np
+import time
+
 sys.path.append('./')
 from assests import *
 from scene import *
@@ -13,14 +16,13 @@ class GameScene(Scenario):
                  sc,
                  planets,
                  sc_start_pos = None, 
-                 initial_orbit_progress = None,
                  win_region = tuple, # ([x1,x2], [y1,y2])
-                 win_velocity = None,
+                 win_velocity = 0.0,
                  win_region_color = (0.0, 255, 174),
                  background = None # Image path / color tuple
                 ):
         
-        super().__init__(resolution, sc, planets, sc_start_pos, initial_orbit_progress)
+        super().__init__(resolution, sc, planets, sc_start_pos)
         self.background = background
         self.win_region = win_region
         self.win_min_velocity = win_velocity
@@ -36,6 +38,7 @@ class Game:
         self.clock = pygame.time.Clock()
         self.fullscreen = fullscreen
         self.fps = fps
+        self.font = pygame.font.SysFont(font, font_size)
         self.scenes = scenes
         self.screen = None # current screen
         self.current_scene = self.scenes[0]
@@ -82,6 +85,13 @@ class Game:
         else:
             self.screen = pygame.display.set_mode((scene.size[0], scene.size[1]))
     
+    def renderSc(self, scene):
+        
+        sc_rot = self.current_scene.sc.sprite.sprite
+        sc_rect = self.current_scene.sc.sprite.rect
+        
+        self.screen.blit(sc_rot, sc_rect)
+    
     def renderScene(self, scene):
         
         '''
@@ -102,7 +112,19 @@ class Game:
         self.renderWinRegion(scene)
         
         # spacecraft
+        self.renderSc(scene)
         
+        # Hu
+        self.renderHud(scene)
+    
+    def renderHud(self, scene):
+        
+        sc = self.current_scene.sc
+        
+        text_surface = self.font.render('Gas: ' + str(sc.gas_level), True, (255,255,255))
+        self.screen.blit(text_surface, (scene.size[0]-100, scene.size[1]-60))
+        text_surface = self.font.render('Velocity: ' + str(round(sc.vel.mag,2)), True, (255,255,255))
+        self.screen.blit( text_surface, (scene.size[0]-145, scene.size[1]-20))
     
     def captureSpacecraftControls(self, event):
             
@@ -120,7 +142,67 @@ class Game:
         elif event.type == pygame.KEYUP and event.key in [pygame.K_DOWN, pygame.K_UP, pygame.K_LEFT, pygame.K_RIGHT]:
         
             self.current_scene.sc.thrust = False                
-      
+    
+    def checkSceneWin(self, scene):
+        
+        sc = self.current_scene.sc
+        win_region_1 = self.current_scene.win_region[0]
+        win_region_2 = self.current_scene.win_region[1]
+        
+        won = False
+        failed = False
+        
+        # Win if
+        
+        if win_region_1[0] == 0 and win_region_2[0] == 0:
+            if sc.x <= 0.0  and win_region_1[1] <= sc.y <= win_region_2[1] and sc.vel.mag >= self.current_scene.win_min_velocity:
+                won = True
+        elif win_region_1[1] == 0 and win_region_2[1] == 0:
+            if sc.y <= 0.0  and win_region_1[0] <= sc.x <= win_region_2[0] and sc.vel.mag >= self.current_scene.win_min_velocity:
+                won = True 
+        elif win_region_1[0] <= sc.x <= win_region_2[0]  and win_region_1[1] <= sc.y <= win_region_2[1] and sc.vel.mag >= self.current_scene.win_min_velocity:
+            won = True
+                
+        # Out of bounds
+        if not 0.0 < sc.x < self.current_scene.size[0] or not 0.0 < sc.y < self.current_scene.size[1]:
+            failed = True
+        
+        return won, failed
+    
+    def renderFullscreenDialog(self, text, xoffset = 0, yoffset = 0):
+        
+        screen_x = self.current_scene.size[0]
+        screen_y = self.current_scene.size[1]
+        
+        text_surface = self.font.render(text, True, (255,255,255))
+        self.screen.fill((0, 0, 0))
+        self.screen.blit( text_surface, (screen_x/2 + xoffset, screen_y/2 + yoffset)) 
+        pygame.display.update()
+        
+        time.sleep(1.5)
+        
+    def nextScene(self, done):
+        
+        current_i = self.scenes.index(self.current_scene)
+        
+        if current_i < len(self.scenes) - 1:
+            self.current_scene  = self.scenes[current_i+1]
+            return self.scenes[current_i+1], done
+        else:
+            return self.current_scene, True
+    
+    def renderFinalMessage(self, won, failed):
+        
+        center_x = self.current_scene.size[0] / 2
+        
+        if won:
+            
+            self.renderFullscreenDialog('You\'re a gravity assist pro :D', xoffset= center_x - 400)
+        
+        else:
+            
+            self.renderFullscreenDialog('No worries, see ya next time!', xoffset = center_x - 400)
+    
     def startGame(self, scene_to_start_at = None):
         
         self.createScreen(scene_to_start_at)
@@ -139,11 +221,23 @@ class Game:
             # Iterate next planetary + sc positions
             self.current_scene.updateAllPos(refresh_rate)
                 
-            # Draw modified scene            
-            self.renderScene(self.current_scene)
-            pygame.display.flip()
-            self.clock.tick(self.fps)
+            # Check exit conditions
+            won, failed = self.checkSceneWin(self.current_scene)
+            
+            if won:
+                self.renderFullscreenDialog('Won!', xoffset=-10)
+                self.current_scene, done = self.nextScene(done)
+            elif failed:
+                self.renderFullscreenDialog('Oops, try again!', xoffset=-75)
+                self.current_scene.resetPos()
+            
+            if not done:
+                # Draw modified scene            
+                self.renderScene(self.current_scene)
+                pygame.display.flip()
+                self.clock.tick(self.fps)
 
+        self.renderFinalMessage(won, failed)
         pygame.quit()
         
           
