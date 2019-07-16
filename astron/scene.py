@@ -32,7 +32,7 @@ class Scenario:
         Default starting position assumed to be bottom centre of screen
         '''
         
-        return self.size[0] / 2, self.size[2]
+        return self.size[0] / 2, self.size[1]
         
     def resetPos(self):
         
@@ -50,7 +50,14 @@ class Scenario:
             planet_f = self.sc.calcGravitationalForce(closes_planet)
                 
         self.sc.setNetMomentum(impulse_time, planet_f)
-        self.sc.move()
+        self.sc.move(impulse_time)
+        
+        return self.sc.x, self.sc.y
+    
+    def updateAllPos(self, impulse_time):
+        
+        [planet.move() for planet in self.planets]
+        self.updateScPos(impulse_time)
     
 def findClosestPlanet(sc, planets):
         
