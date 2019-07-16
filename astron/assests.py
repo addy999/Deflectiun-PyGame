@@ -63,11 +63,13 @@ class Asset:
               
 class Planet(Asset):
     
-    def __init__(self, name, x  = 0.0, y = 0.0, mass = 0.0, orbit = Orbit):
+    def __init__(self, name, mass = 0.0, orbit = Orbit, color = (100,100,100)):
     
-        super().__init__(name, x, y, mass)
+        super().__init__(name, 0.0, 0.0, mass)
         self.g = 6.67408e-11 # m^3/kg*s^2
         self.orbit = orbit
+        self.color = color
+        self.move()
             
     def move(self):
         
@@ -98,9 +100,9 @@ class Sprite:
         
 class Spacecraft(Asset):
     
-    def __init__(self, name, starting_x = 0.0, starting_y = 0.0, mass = 0.0, gas_level = 0.0, thrust_force = 0.0, sprite = None):
+    def __init__(self, name, mass = 0.0, gas_level = 0.0, thrust_force = 0.0, sprite = None):
         
-        super().__init__(name, starting_x, starting_y, mass)
+        super().__init__(name, 0.0, 0.0, mass)
         self.gas_level = gas_level
         self.thrust = False
         self.thrust_direction = '-y' # +/-x,-y
