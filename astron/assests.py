@@ -77,26 +77,29 @@ class Planet(Asset):
 
 class Sprite:
     
-    def __init__(self, image_path = DEFAULT_SC_SPRITE, size = (50, 50), thruster_color = (0, 157, 255)):
+    def __init__(self, image_path = DEFAULT_SC_SPRITE, size = (50, 50), thruster_color = (0, 157, 255), theta_deg_offset = 90.0):
     
         self.size = size
         self.thruster_color = thruster_color
         self.image = pygame.image.load(image_path)
+        self.theta_deg_offset = theta_deg_offset
     
     def transform(self, x, y, radians):
         
         ''' Return PyGame Image + Rectangle objects for scree.blit onto screen. '''
         
-        sc_rot = pygame.transform.rotate(pygame.transform.scale(self.image, self.size), math.degrees(radians))
+        sc_rot = pygame.transform.rotate(pygame.transform.scale(self.image, self.size), math.degrees(radians) + self.theta_deg_offset)
         sc_rect = sc_rot.get_rect()
         sc_rect = sc_rect.move((x-sc_rect.centerx, y-sc_rect.centery))
         
         self.sprite = sc_rot
         self.rect = sc_rect 
+        
+        return sc_rot, sc_rect
     
-    def _render(self, x,y, theta_degrees, thrust_direction = None):
+    # def _render(self, x,y, theta_degrees, thrust_direction = None):
     
-        sc_rot, sc_rect = self.transform(x, y, theta_degrees)
+    #     sc_rot, sc_rect = self.transform(x, y, theta_degrees)
         
 class Spacecraft(Asset):
     
@@ -104,6 +107,7 @@ class Spacecraft(Asset):
         
         super().__init__(name, 0.0, 0.0, mass)
         self.gas_level = gas_level
+        self._initial_gas_level = gas_level
         self.thrust = False
         self.thrust_direction = '-y' # +/-x,-y
         self.thrust_mag = thrust_force
@@ -169,6 +173,14 @@ class Spacecraft(Asset):
         
         self.x += self.vel.x * time
         self.y += self.vel.y * time
+    
+    def reset(self, sc_start_pos = None):
+        
+        if sc_start_pos:
+            self.x, self.y = sc_start_pos
+        self.p = Momentum(0.0, 0.0)
+        self.thrust = False
+        self.gas_level = self._initial_gas_level
                
     @property
     def p(self):
@@ -178,7 +190,7 @@ class Spacecraft(Asset):
     def p(self, val):
         self._p = val
         self.vel = Velocity(val.x / self.mass, val.y / self.mass)
-        # self.sprite.transform(self.x, self.y, self.vel.theta)
+        self.sprite.transform(self.x, self.y, self.vel.theta)
         
        
         
