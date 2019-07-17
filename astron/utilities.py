@@ -85,11 +85,11 @@ class Orbit:
     def y(self, progress):
         return self.b * np.sin(progress) + self.center_y
     
-    def nextPos(self):
+    def nextPos(self, factor = 1.0):
         if self.cw:
-            self.progress += self.angular_step
+            self.progress += self.angular_step * factor
         else:
-            self.progress -= self.angular_step
+            self.progress -= self.angular_step * factor
             
         return self.x(self.progress), self.y(self.progress)
 

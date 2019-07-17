@@ -71,9 +71,9 @@ class Planet(Asset):
         self.color = color
         self.move()
             
-    def move(self):
+    def move(self, dt = 1.0):
         
-        self.x, self.y = self.orbit.nextPos()
+        self.x, self.y = self.orbit.nextPos(dt)
 
 class Sprite:
     
