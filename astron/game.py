@@ -28,6 +28,7 @@ class GameScene(Scenario):
         self.win_region = win_region
         self.win_min_velocity = win_velocity
         self.win_region_color = win_region_color
+        self._attempts = 0
         
 class Game:
     
@@ -44,6 +45,7 @@ class Game:
         self.screen = None # current screen
         self.current_scene = self.scenes[0]
         self._bg_loaded = False
+        self.__rpk = 45 / 4e16 # radius per kilogram of planet
     
     def loadImage(self, path, size):
         
@@ -75,8 +77,11 @@ class Game:
     
     def renderPlanets(self, scene):
         
+        rpk = self.__rpk
+        
         for planet in scene.planets:
-            pygame.draw.ellipse(self.screen, planet.color, pygame.Rect(planet.x-25, planet.y-25, 50, 50))
+            
+            pygame.draw.ellipse(self.screen, planet.color, pygame.Rect(planet.x-rpk*planet.mass, planet.y-rpk*planet.mass, rpk*planet.mass * 2, rpk*planet.mass * 2))
             # Orbit
             pygame.draw.ellipse(self.screen, (255,255,255), pygame.Rect(planet.orbit.center_x-planet.orbit.a, planet.orbit.center_y-planet.orbit.b, planet.orbit.a*2, planet.orbit.b*2), 1)
     
@@ -93,9 +98,13 @@ class Game:
         
         if self.fullscreen:
             
-            # Only windows!
+            infoObject = pygame.display.Info()
+            screen_x, screen_y = infoObject.current_w, infoObject.current_h
             
-            ctypes.windll.user32.SetProcessDPIAware()
+            if scene.size[0] == screen_x or scene.size[1] == screen_y:
+                # Only windows!            
+                ctypes.windll.user32.SetProcessDPIAware()
+            
             self.screen = pygame.display.set_mode((scene.size[0], scene.size[1]), pygame.FULLSCREEN)
             
         else:
@@ -147,6 +156,10 @@ class Game:
         # Escape velocity needed
         text_surface = self.font.render('Velocity Required: ' + str(round(self.current_scene.win_min_velocity, 2)), True, (255,255,255))
         self.screen.blit(text_surface, (0.0, scene.size[1]-20))
+        
+        # Attempts
+        text_surface = self.font.render('Attempts: ' + str(self.current_scene._attempts), True, (255,255,255))
+        self.screen.blit(text_surface, (scene.size[0]-145, 0.0))
     
     def captureSpacecraftControls(self, event):
             
@@ -175,7 +188,6 @@ class Game:
         failed = False
         
         # Win if
-        
         if win_region_1[0] == 0 and win_region_2[0] == 0:
             if sc.x <= 0.0  and win_region_1[1] <= sc.y <= win_region_2[1] and sc.vel.mag >= self.current_scene.win_min_velocity:
                 won = True
@@ -189,16 +201,31 @@ class Game:
         if not 0.0 < sc.x < self.current_scene.size[0] or not 0.0 < sc.y < self.current_scene.size[1]:
             failed = True
         
+        # Collisions
+        for planet in self.current_scene.planets:
+            planet_r = self.__rpk*planet.mass
+            if planet.x - planet_r <= sc.x <= planet.x + planet_r and planet.y - planet_r <= sc.y <= planet.y + planet_r:
+                failed = True
+        
         return won, failed
     
-    def renderFullscreenDialog(self, text, xoffset = 0, yoffset = 0):
+    def renderFullscreenDialog(self, texts, xoffsets = [], yoffsets = []):
         
         screen_x = self.current_scene.size[0]
         screen_y = self.current_scene.size[1]
-        
-        text_surface = self.font.render(text, True, (255,255,255))
         self.screen.fill((0, 0, 0))
-        self.screen.blit( text_surface, (screen_x/2 + xoffset, screen_y/2 + yoffset)) 
+        c = 0
+        
+        if not xoffsets:
+            [xoffsets.append(0) for i in range(len(texts))]
+        if not yoffsets:
+            [yoffsets.append(0) for i in range(len(texts))]
+        
+        for text in texts:
+            text_surface = self.font.render(text, True, (255,255,255))
+            self.screen.blit( text_surface, (screen_x/2 + xoffsets[c], screen_y/2 + yoffsets[c])) 
+            c+=1 
+            
         pygame.display.update()
         
         time.sleep(1.5)
@@ -219,11 +246,29 @@ class Game:
         
         if won:
             
-            self.renderFullscreenDialog('You\'re a gravity assist pro :D', xoffset= center_x -  400)
+            self.renderFullscreenDialog([
+                'You\'re a gravity assist pro :D',
+                'Final score: ' + str(self.calcScore())
+                ], 
+                xoffsets = [-100, -50.0], yoffsets = [0, 100])
         
         else:
             
-            self.renderFullscreenDialog('No worries, see ya next time!', xoffset = center_x - 425)
+            self.renderFullscreenDialog(['No worries, see ya next time!', 
+                                         'Final score: ' + str(self.calcScore())], xoffsets = [-100, -50.0], yoffsets = [0, 100])
+        
+    def calcScore(self):
+        
+        per_scene_score = 100.0
+        attempt_deductions = 25.0
+        
+        total = 0.0
+        
+        for scene in self.scenes:
+            if scene._attempts > 1:
+                total += per_scene_score - (scene._attempts-1) * attempt_deductions
+            
+        return total            
     
     def startGame(self, scene_to_start_at = None):
         
@@ -233,6 +278,7 @@ class Game:
         done = False        
         while not done:
             
+            # check game exit conditions
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                         done = True
@@ -243,17 +289,17 @@ class Game:
             # Iterate next planetary + sc positions
             self.current_scene.updateAllPos(dt)
                 
-            # Check exit conditions
+            # Check scene exit conditions
             won, failed = self.checkSceneWin(self.current_scene)
             if won:
-                self.renderFullscreenDialog('Won!', xoffset=-10)
+                self.renderFullscreenDialog(['Won!'], xoffsets=[-10])
                 self.current_scene, done = self.nextScene(done)
+                self.current_scene._attempts += 1
             elif failed:
-                self.renderFullscreenDialog('Oops, try again!', xoffset=-75)
+                self.renderFullscreenDialog(['Oops, try again!'], xoffsets=[-75])
                 self.current_scene.resetPos()
-            
-            if won or failed: self._bg_img, self._bg_rect = None, None
-            
+                self.current_scene._attempts += 1
+    
             if not done:
                 # Draw modified scene            
                 self.renderScene(self.current_scene)
