@@ -77,18 +77,34 @@ class Planet(Asset):
 
 class Sprite:
     
-    def __init__(self, image_path = DEFAULT_SC_SPRITE, size = (50, 50), thruster_color = (0, 157, 255), theta_deg_offset = 90.0):
+    def __init__(self, image_path = DEFAULT_SC_SPRITE, size = (100, 100), theta_deg_offset = 90.0):
     
         self.size = size
-        self.thruster_color = thruster_color
-        self.image = pygame.image.load(image_path)
+        self.image_path = image_path
         self.theta_deg_offset = theta_deg_offset
+        
+        self.checkPath(image_path)
+        self._loadAllImages(image_path)
+        
+    def checkPath(self, image_path):
+        
+        if image_path[-3:] != 'png':
+            raise ValueError('Must be a PNG image.')
+        
+    def _loadAllImages(self, image_path):
+        
+        self.base = pygame.image.load(image_path)
+        self.px = pygame.image.load(image_path[:-4] + '_+x' + '.png')
+        self.py = pygame.image.load(image_path[:-4] + '_+y' + '.png')
+        self.nx = pygame.image.load(image_path[:-4] + '_-x' + '.png')
+        self.ny = pygame.image.load(image_path[:-4] + '_-y' + '.png')
     
-    def transform(self, x, y, radians):
+    def transform(self, x, y, radians, thruster_direction = None):
         
         ''' Return PyGame Image + Rectangle objects for scree.blit onto screen. '''
         
-        sc_rot = pygame.transform.rotate(pygame.transform.scale(self.image, self.size), math.degrees(radians) + self.theta_deg_offset)
+        img = self.loadThrusterImage(thruster_direction)
+        sc_rot = pygame.transform.rotate(img, math.degrees(radians) + self.theta_deg_offset)
         sc_rect = sc_rot.get_rect()
         sc_rect = sc_rect.move((x-sc_rect.centerx, y-sc_rect.centery))
         
@@ -96,6 +112,23 @@ class Sprite:
         self.rect = sc_rect 
         
         return sc_rot, sc_rect
+    
+    def loadThrusterImage(self, thrust_direction = None):
+        
+        if thrust_direction:
+            if thrust_direction=='+x':
+                img = pygame.transform.scale(self.px, self.size)
+            if thrust_direction=='+y':
+                img = pygame.transform.scale(self.py, self.size)
+            if thrust_direction=='-x':
+                img = pygame.transform.scale(self.nx, self.size)
+            if thrust_direction=='-y':
+                img = pygame.transform.scale(self.ny, self.size)
+        
+        else:
+            img = pygame.transform.scale(self.base, self.size)
+        
+        return img
     
     # def _render(self, x,y, theta_degrees, thrust_direction = None):
     
@@ -190,7 +223,9 @@ class Spacecraft(Asset):
     def p(self, val):
         self._p = val
         self.vel = Velocity(val.x / self.mass, val.y / self.mass)
-        self.sprite.transform(self.x, self.y, self.vel.theta)
-        
+        if self.thrust:
+            self.sprite.transform(self.x, self.y, self.vel.theta, self.thrust_direction)
+        else:
+            self.sprite.transform(self.x, self.y, self.vel.theta)        
        
         
