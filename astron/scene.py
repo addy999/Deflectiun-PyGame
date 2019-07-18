@@ -1,9 +1,12 @@
 import pygame
 import os, sys
 import math
-sys.path.append('./')
-from assests import *
-from utilities import *
+
+modpath = os.path.abspath(os.path.split(sys.argv[0])[0])
+sys.path.append(modpath)
+
+from .assests import *
+from .utilities import *
 
 class Scenario:
     
@@ -40,13 +43,18 @@ class Scenario:
         for planet in self.planets:
             planet.orbit.progress = self.initial_orbit_progress[planet]
     
-    def updateScPos(self, impulse_time):
+    def updateScPos(self, impulse_time, closest_only = True):
         
-        closes_planet = findClosestPlanet(self.sc, self.planets)
         planet_f = 0.0
         
-        if closes_planet:
-            planet_f = self.sc.calcGravitationalForce(closes_planet)
+        if closest_only:
+            closes_planet = findClosestPlanet(self.sc, self.planets)
+                
+            if closes_planet:
+                planet_f = self.sc.calcGravitationalForce(closes_planet)
+        else:
+            for planet in self.planets:
+                planet_f += self.sc.calcGravitationalForce(planet)           
                 
         self.sc.setNetMomentum(impulse_time, planet_f)
         self.sc.move(impulse_time)
