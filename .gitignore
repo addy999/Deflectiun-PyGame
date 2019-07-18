@@ -2,7 +2,9 @@
 .vscode
 /*.ipynb
 /.ipynb_checkpoints
-*/.pyc
+/*.pyc
+dist
+astron.egg-info
 
 astron/__pycache__/assests.cpython-37.pyc
 astron/__pycache__/utilities.cpython-37.pyc
