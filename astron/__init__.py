@@ -1,5 +1,5 @@
 __name__ = 'astron'
-__version__ = '0.1.9.4'
+__version__ = '0.1.9.5'
 
 import sys, os
 

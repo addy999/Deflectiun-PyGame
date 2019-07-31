@@ -7,7 +7,7 @@ from setuptools import setup
 # import astron
 
 setup(name='astron',
-      version='0.1.9.4',
+      version='0.1.9.5',
       description='...',
       url='https://www.python.org',
       author='Addy Bhatia',
