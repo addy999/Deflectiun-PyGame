@@ -1,5 +1,4 @@
-# Deflectiun
-## Formaly Astron
+# Deflectiun (formaly Astron)
 ---
 
 ## Installation instructions
