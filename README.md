@@ -1,4 +1,4 @@
-# Deflectiun (formaly Astron)
+# Spaceshots (formaly Astron)
 ---
 
 ## Installation instructions
